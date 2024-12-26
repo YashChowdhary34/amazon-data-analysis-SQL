@@ -8,7 +8,6 @@
 This project is a comprehensive analysis of an Amazon-like e-commerce platform using SQL. The dataset simulates real-world data, capturing the complexities of e-commerce operations, including orders, products, customers, payments, shipping, inventory, and more. Through advanced SQL queries, the project aims to derive actionable business insights and solve critical operational challenges.
 
 ## Key Business Problems Solved
-## Key Business Problems Solved
 
 1. **Top-selling products and categories**: Identified top 10 products and categories based on total sales and revenue.  
 2. **Revenue trends and category performance**: Analyzed revenue trends across categories to find the most profitable ones.  
