@@ -1,7 +1,7 @@
 # Amazon Data Analysis Using SQL
 
 <div align="center">
-    <img src="https://github.com/user-attachments/assets/9f3a9059-725e-409b-876d-f45fb875e573" alt="Amazon Logo" height="300" width="500">
+    <img src="https://github.com/user-attachments/assets/9f3a9059-725e-409b-876d-f45fb875e573" alt="Amazon Logo" height="200" width="300">
 </div>
 
 ## Overview
