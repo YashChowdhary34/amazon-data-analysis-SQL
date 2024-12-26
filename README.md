@@ -8,14 +8,28 @@
 This project is a comprehensive analysis of an Amazon-like e-commerce platform using SQL. The dataset simulates real-world data, capturing the complexities of e-commerce operations, including orders, products, customers, payments, shipping, inventory, and more. Through advanced SQL queries, the project aims to derive actionable business insights and solve critical operational challenges.
 
 ## Key Business Problems Solved
-- Identified top-selling products and categories.
-- Analyzed revenue trends and performance metrics.
-- Calculated customer lifetime value.
-- Monitored inventory to prevent stockouts.
-- Evaluated shipping delays and success rates.
-- Explored cross-selling opportunities and customer behavior patterns.
-- Detected top-performing sellers and regions.
-- More, as listed in the business problems section below.
+## Key Business Problems Solved
+
+1. **Top-selling products and categories**: Identified top 10 products and categories based on total sales and revenue.  
+2. **Revenue trends and category performance**: Analyzed revenue trends across categories to find the most profitable ones.  
+3. **Customer lifetime value (CLV) calculation**: Computed total customer spending to highlight high-value clients.  
+4. **Average order value analysis**: Evaluated average order value to understand customer purchasing behavior.  
+5. **Monthly sales trends**: Monitored monthly sales trends to identify peak and low-performing periods.  
+6. **Customer segmentation**: Categorized customers as "Returning" or "New" based on purchase history.  
+7. **Cross-selling opportunities**: Identified frequently bought-together products to enhance cross-selling strategies.  
+8. **Inventory stock alerts**: Detected critically low stock levels for timely restocking.  
+9. **Shipping performance and delays**: Evaluated shipping delays to optimize delivery processes.  
+10. **Payment success and failure rates**: Analyzed payment transaction success and failure rates.  
+11. **Top-performing sellers**: Ranked sellers based on revenue contributions to prioritize partnerships.  
+12. **Product margin analysis**: Evaluated product margins to identify the most profitable items.  
+13. **Most returned products**: Highlighted products with high return rates for quality improvement.  
+14. **Pending shipments**: Identified orders with payments completed but shipments pending.  
+15. **Inactive sellers**: Flagged sellers with no sales in the past 6 months.  
+16. **Predictive analysis for sales trends**: Proposed solutions to forecast sales trends using historical data.  
+17. **Real-time inventory updates**: Suggested trigger-based inventory updates for better stock management.  
+18. **Customer segmentation for targeted marketing**: Segmented customers by spending patterns for marketing campaigns.  
+19. **Supply chain optimization**: Developed queries to enhance delivery efficiency and reduce shipping delays.  
+20. **Sentiment analysis using customer feedback**: Explored customer reviews for satisfaction and churn prediction.  
 
 ## Objectives
 - Perform detailed data analysis on an e-commerce dataset.
