@@ -26,7 +26,7 @@ CREATE TABLE product (
     product_id INT PRIMARY KEY,
     product_name VARCHAR(100) NOT NULL,
     price FLOAT NOT NULL, -- price_per_unit
-    cogs FLOAT NOT NULL,
+    cogs FLOAT NOT NULL, -- manufacturing_cost_per_product
     category_id INT,
     FOREIGN KEY (category_id) REFERENCES category(category_id)
 );

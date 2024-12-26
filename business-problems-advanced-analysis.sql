@@ -142,7 +142,236 @@ ORDER BY 2, 4;
 -- query products with stock levels below a certain threshold (less than 10 units)
 -- challenge: include last restock date and warehouse information
 
+SELECT
+	product.product_id,
+    product.product_name,
+    inventory.stock AS curr_stock_left,
+    inventory.last_stock_date,
+    inventory.warehouse_id
+FROM product
+JOIN inventory ON product.product_id = inventory.product_id
+WHERE inventory.stock < 10;
 
+-- 9. Shipping delays
+-- identify orders where the shipping date is later than 7 days after the order date
+-- challenge: include customer, order details, and delivery provider
+
+SELECT
+	orders.*,
+    shipping.shipping_date,
+    shipping.shipping_provider
+FROM orders
+JOIN shipping ON orders.order_id = shipping.order_id
+WHERE shipping.shipping_date - orders.order_date > 7;
+
+-- 10. Payment Success Rate
+-- calculate the percentage of successful payments across all orders
+-- challenge: include breakdowns by payment status (failed, pending)
+
+SELECT
+	payment.payment_status,
+    (COUNT(*) / (SELECT COUNT(*) FROM payment)) * 100 AS percent
+FROM orders
+JOIN payment ON orders.order_id = payment.order_id
+WHERE payment.payment_status = 'Success';
+
+-- 11. Top Performing Sellers
+-- find the top 5 sellers based on total sales value
+-- challenge: include both successful and failed orders, and display their percentage of successful orders
+
+SELECT
+	seller.seller_id,
+    SUM(order_item.price) AS total_sales_value,
+    ROUND((COUNT(CASE WHEN orders.order_status = 'Delivered' THEN 1 END) * 1.0 / 
+		COUNT(orders.order_id)) * 100, 2) AS percent_successful_orders
+FROM orders
+JOIN seller ON orders.seller_id = seller.seller_id
+JOIN order_item ON orders.order_id = order_item.order_id
+GROUP BY 1
+ORDER BY 2 DESC
+LIMIT 5;
+
+-- 12. Product profit margin
+-- calculate the net profit margin for each product (diff btw price and cost of goods sold)
+-- challenge: rank products by their profit margin, showing highest to lowest
+
+WITH profit_loss_table AS
+(
+	SELECT
+		product.product_id,
+		SUM(CASE WHEN product.cogs < order_item.price THEN order_item.price - product.cogs 
+			ELSE 0 END) AS profit_margin,
+		SUM(CASE WHEN product.cogs > order_item.price THEN product.cogs - order_item.price
+			ELSE 0 END) AS loss_margin
+	FROM order_item
+	JOIN product ON order_item.product_id = product.product_id
+    GROUP BY 1
+),
+net_profit_table AS
+(
+	SELECT
+		product_id,
+		CASE WHEN profit_margin > loss_margin THEN profit_margin - loss_margin ELSE NULL END AS net_profit
+	FROM profit_loss_table
+)
+SELECT
+	product_id,
+    net_profit,
+    RANK() OVER(ORDER BY net_profit DESC) AS profit_rank
+FROM net_profit_table
+ORDER BY 3, 2;
+
+-- 13. Most returned products
+-- query the top 10 products by the number of returns
+-- challenge: display the return rate as a percentage of total units sold for each product
+
+WITH top10_returned_products_table AS
+(
+	SELECT
+		product.product_id,
+		product.product_name,
+		COUNT(*) AS total_num_of_returns
+	FROM product
+	JOIN order_item ON product.product_id = order_item.product_id
+	JOIN shipping ON order_item.order_id = shipping.order_id
+	WHERE shipping.shipping_status = 'Returned'
+	GROUP BY 1, 2
+	ORDER BY 3 DESC
+	LIMIT 10
+)
+SELECT
+	product_id,
+    product_name,
+    total_num_of_returns,
+    ROUND((total_num_of_returns * 1.0/ 
+		(SELECT SUM(quantity) FROM order_item WHERE order_item.product_id = product_id))
+			* 100 , 2) AS return_rate
+FROM top10_returned_products_table;
+
+-- 15. Inactive sellers
+-- identify sellers who haven't made any sales in the last 6 months
+-- challenge: show the last sale date and total sales from those sellers
+
+WITH sellers_no_sales_6months AS
+(
+	SELECT
+		seller_id
+	FROM seller 
+	WHERE seller_id NOT IN 
+		(SELECT seller_id FROM orders WHERE order_date >= DATE_SUB(CURRENT_DATE, INTERVAL 6 MONTH))
+)
+SELECT
+	orders.seller_id,
+    MAX(orders.order_date) AS last_sale_date,
+    SUM(order_item.price) AS total_sales_amount
+FROM orders
+JOIN sellers_no_sales_6months ON orders.seller_id = sellers_no_sales_6months.seller_id
+JOIN order_item ON orders.order_id = order_item.order_id
+GROUP BY 1;
+
+-- 16. Identify customers into returning or new
+-- if the customer has done more than 5 returns and categorize them as returning otherwise new
+-- challenge: list customers id, name, total orders, total returs
+
+SELECT 
+    c.customer_id, 
+    c.first_name, 
+    c.last_name, 
+    CASE 
+        WHEN COUNT(s.return_date) > 0 THEN 'Returning'
+        ELSE 'New'
+    END AS customer_category
+FROM customer c
+LEFT JOIN orders o ON c.customer_id = o.customer_id
+LEFT JOIN shipping s ON o.order_id = s.order_id
+GROUP BY c.customer_id, c.first_name, c.last_name;
+
+-- 17. Cross Selling Opportunity
+-- Find products that are commonly bought together. For example, if customers who bought "AirPods" 
+-- also bought "iPhones," suggest cross-selling opportunities
+
+SELECT 
+    oi1.product_id AS product_id_1,
+    p1.product_name AS product_name_1,
+    oi2.product_id AS product_id_2,
+    p2.product_name AS product_name_2,
+    COUNT(*) AS times_bought_together
+FROM order_item oi1
+JOIN order_item oi2 ON oi1.order_id = oi2.order_id AND oi1.product_id < oi2.product_id
+JOIN product p1 ON oi1.product_id = p1.product_id
+JOIN product p2 ON oi2.product_id = p2.product_id
+GROUP BY oi1.product_id, p1.product_name, oi2.product_id, p2.product_name
+ORDER BY times_bought_together DESC
+LIMIT 10;
+
+-- 18. Top 5 customers by orders in each state
+-- Identify the top 5 customers in each state based on the number of orders placed
+
+WITH ranked_customers AS (
+    SELECT 
+        c.state, 
+        c.customer_id, 
+        c.first_name, 
+        c.last_name, 
+        COUNT(o.order_id) AS total_orders,
+        RANK() OVER (PARTITION BY c.state ORDER BY COUNT(o.order_id) DESC) AS rank
+    FROM customer c
+    JOIN orders o ON c.customer_id = o.customer_id
+    GROUP BY c.state, c.customer_id, c.first_name, c.last_name
+)
+SELECT 
+    state, 
+    customer_id, 
+    first_name, 
+    last_name, 
+    total_orders
+FROM ranked_customers
+WHERE rank <= 5;
+
+-- 19. Revenue by shipping providers
+-- Calculate the total revenue generated by each shipping provider
+
+SELECT 
+    s.shipping_provider, 
+    SUM(oi.quantity * oi.price) AS total_revenue
+FROM shipping s
+JOIN orders o ON s.order_id = o.order_id
+JOIN order_item oi ON o.order_id = oi.order_id
+WHERE s.shipping_status = 'Delivered'
+GROUP BY s.shipping_provider
+ORDER BY total_revenue DESC;
+
+-- 20. Top 10 Products with the Highest Decreasing Revenue Ratio Compared to the Last Year
+-- Identify the top 10 products with the highest revenue decline compared to the previous year
+
+WITH yearly_revenue AS (
+    SELECT 
+        p.product_id, 
+        p.product_name, 
+        YEAR(o.order_date) AS year, 
+        SUM(oi.quantity * oi.price) AS revenue
+    FROM product p
+    JOIN order_item oi ON p.product_id = oi.product_id
+    JOIN orders o ON oi.order_id = o.order_id
+    GROUP BY p.product_id, p.product_name, YEAR(o.order_date)
+),
+revenue_change AS (
+    SELECT 
+        yr1.product_id, 
+        yr1.product_name, 
+        yr1.revenue AS current_year_revenue,
+        yr2.revenue AS previous_year_revenue,
+        (yr1.revenue - yr2.revenue) / yr2.revenue * 100 AS revenue_decline_percentage
+    FROM yearly_revenue yr1
+    JOIN yearly_revenue yr2 ON yr1.product_id = yr2.product_id AND yr1.year = yr2.year + 1
+)
+SELECT 
+    product_id, 
+    product_name, 
+    revenue_decline_percentage
+FROM revenue_change
+ORDER BY revenue_decline_percentage DESC
+LIMIT 10;
 
 
 
